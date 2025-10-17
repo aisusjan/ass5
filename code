@@ -1,0 +1,259 @@
+package org.example.lms;
+
+import java.util.*;
+
+// =============================
+// Online Education Platform
+// Decorator + Facade Patterns
+// With Interactive Console Menu
+// =============================
+
+// ===== Interface =====
+interface Course {
+    void deliverContent(Student student);
+    String getTitle();
+}
+
+// ===== Concrete Courses =====
+class MathCourse implements Course {
+    @Override
+    public void deliverContent(Student student) {
+        System.out.println(student.getName() + " is learning Mathematics...");
+    }
+
+    @Override
+    public String getTitle() {
+        return "Math Course";
+    }
+}
+
+class ProgrammingCourse implements Course {
+    @Override
+    public void deliverContent(Student student) {
+        System.out.println(student.getName() + " is learning Programming...");
+    }
+
+    @Override
+    public String getTitle() {
+        return "Programming Course";
+    }
+}
+
+// ===== Decorators =====
+abstract class CourseDecorator implements Course {
+    protected Course decoratedCourse;
+
+    public CourseDecorator(Course decoratedCourse) {
+        this.decoratedCourse = decoratedCourse;
+    }
+
+    @Override
+    public void deliverContent(Student student) {
+        decoratedCourse.deliverContent(student);
+    }
+
+    @Override
+    public String getTitle() {
+        return decoratedCourse.getTitle();
+    }
+}
+
+class CertificateDecorator extends CourseDecorator {
+    public CertificateDecorator(Course decoratedCourse) {
+        super(decoratedCourse);
+    }
+
+    @Override
+    public void deliverContent(Student student) {
+        super.deliverContent(student);
+        System.out.println("🏅 " + student.getName() + " earned a Certificate for " + getTitle());
+    }
+}
+
+class MentorSupportDecorator extends CourseDecorator {
+    public MentorSupportDecorator(Course decoratedCourse) {
+        super(decoratedCourse);
+    }
+
+    @Override
+    public void deliverContent(Student student) {
+        super.deliverContent(student);
+        System.out.println("👨‍🏫 Personal mentor is guiding " + student.getName() + " in " + getTitle());
+    }
+}
+
+class GamificationDecorator extends CourseDecorator {
+    public GamificationDecorator(Course decoratedCourse) {
+        super(decoratedCourse);
+    }
+
+    @Override
+    public void deliverContent(Student student) {
+        super.deliverContent(student);
+        System.out.println("🎮 " + student.getName() + " earned 100 XP and joined the leaderboard for " + getTitle());
+    }
+}
+
+// ===== Student Model =====
+class Student {
+    private String name;
+    private int age;
+    private List<String> completedCourses = new ArrayList<>();
+
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public List<String> getCompletedCourses() { return completedCourses; }
+
+    public void addCompletedCourse(String courseTitle) {
+        completedCourses.add(courseTitle);
+    }
+}
+
+// ===== Services =====
+class NotificationService {
+    public void sendNotification(Student student, String message) {
+        System.out.println("📩 Notification to " + student.getName() + ": " + message);
+    }
+}
+
+// ===== Facade =====
+class StudentPortalFacade {
+    private Map<String, Student> students = new HashMap<>();
+    private NotificationService notificationService = new NotificationService();
+
+    public void addStudent(Student student) {
+        students.put(student.getName(), student);
+        System.out.println("✅ Student added: " + student.getName() + " (" + student.getAge() + " y.o.)");
+    }
+
+    public Student getStudent(String name) {
+        return students.get(name);
+    }
+
+    public void listStudents() {
+        if (students.isEmpty()) {
+            System.out.println("⚠️ No students registered yet.");
+            return;
+        }
+        System.out.println("👥 Registered Students:");
+        students.values().forEach(s ->
+                System.out.println("- " + s.getName() + " (" + s.getAge() + " y.o.)")
+        );
+    }
+
+    public void enrollInCourse(Student student, Course course) {
+        if (!isEligible(student, course)) {
+            System.out.println("❌ " + student.getName() + " is not eligible for " + course.getTitle());
+            return;
+        }
+        System.out.println("📝 " + student.getName() + " enrolled in " + course.getTitle());
+        notificationService.sendNotification(student, "You are enrolled in " + course.getTitle());
+        startLearning(student, course);
+        completeCourse(student, course);
+    }
+
+    public void startLearning(Student student, Course course) {
+        System.out.println("▶️ " + student.getName() + " started " + course.getTitle());
+        course.deliverContent(student);
+    }
+
+    public void completeCourse(Student student, Course course) {
+        student.addCompletedCourse(course.getTitle());
+        System.out.println("✅ " + student.getName() + " completed " + course.getTitle());
+        notificationService.sendNotification(student, "You completed " + course.getTitle());
+    }
+
+    private boolean isEligible(Student student, Course course) {
+        if (course instanceof ProgrammingCourse && student.getAge() < 18) {
+            return false; // too young for programming
+        }
+        if (course instanceof MathCourse && student.getAge() > 30) {
+            return false; // too old for math in this demo
+        }
+        if (student.getCompletedCourses().contains(course.getTitle())) {
+            return false; // already done
+        }
+        return true;
+    }
+}
+
+// ===== MAIN: Interactive Demo =====
+public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        StudentPortalFacade portal = new StudentPortalFacade();
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n===== ONLINE EDUCATION PLATFORM =====");
+            System.out.println("1️⃣  Add Student");
+            System.out.println("2️⃣  List Students");
+            System.out.println("3️⃣  Enroll Student in Course");
+            System.out.println("4️⃣  Exit");
+            System.out.print("👉 Choose an option: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1":
+                    addStudentMenu(portal);
+                    break;
+                case "2":
+                    portal.listStudents();
+                    break;
+                case "3":
+                    enrollMenu(portal);
+                    break;
+                case "4":
+                    running = false;
+                    System.out.println("👋 Exiting system...");
+                    break;
+                default:
+                    System.out.println("⚠️ Invalid choice, try again!");
+            }
+        }
+    }
+
+    private static void addStudentMenu(StudentPortalFacade portal) {
+        System.out.print("Enter student name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter student age: ");
+        int age = Integer.parseInt(scanner.nextLine());
+        portal.addStudent(new Student(name, age));
+    }
+
+    private static void enrollMenu(StudentPortalFacade portal) {
+        System.out.print("Enter student name: ");
+        String name = scanner.nextLine();
+        Student student = portal.getStudent(name);
+
+        if (student == null) {
+            System.out.println("❌ Student not found. Please add first.");
+            return;
+        }
+
+        System.out.println("Select Course:");
+        System.out.println("1️⃣  Math (Mentor + Certificate)");
+        System.out.println("2️⃣  Programming (Gamification)");
+        System.out.print("👉 Choose: ");
+        String option = scanner.nextLine();
+
+        Course course;
+        if (option.equals("1")) {
+            course = new MentorSupportDecorator(new CertificateDecorator(new MathCourse()));
+        } else if (option.equals("2")) {
+            course = new GamificationDecorator(new ProgrammingCourse());
+        } else {
+            System.out.println("⚠️ Invalid course selection!");
+            return;
+        }
+
+        portal.enrollInCourse(student, course);
+    }
+}
