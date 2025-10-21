@@ -1,0 +1,897 @@
+import java.util.*;
+
+// Device Interface
+interface Device {
+    void operate();
+    String getDescription();
+    String getStatus();
+    String getName();
+}
+
+// Concrete Devices
+class Light implements Device {
+    private boolean isOn = false;
+    private int brightness = 100;
+    private final String name;
+
+    public Light(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void operate() {
+        isOn = !isOn;
+        String status = isOn ? "ON" : "OFF";
+        System.out.println("💡 Light '" + name + "' is now " + status);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Smart Light - " + name;
+    }
+
+    @Override
+    public String getStatus() {
+        return String.format("💡 Light[%s]: %s, Brightness: %d%%",
+                name, isOn ? "ON" : "OFF", brightness);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void setBrightness(int level) {
+        this.brightness = Math.max(0, Math.min(100, level));
+        System.out.println("💡 Light '" + name + "' brightness set to " + brightness + "%");
+    }
+
+    public boolean isOn() {
+        return isOn;
+    }
+
+    public int getBrightness() {
+        return brightness;
+    }
+}
+
+class Thermostat implements Device {
+    private int temperature = 22;
+    private String mode = "NORMAL";
+    private final String name;
+
+    public Thermostat(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void operate() {
+        System.out.println("🌡️  Thermostat '" + name + "' maintaining " + temperature + "°C in " + mode + " mode");
+    }
+
+    @Override
+    public String getDescription() {
+        return "Smart Thermostat - " + name;
+    }
+
+    @Override
+    public String getStatus() {
+        return String.format("🌡️  Thermostat[%s]: %d°C, Mode: %s", name, temperature, mode);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void setTemperature(int temp) {
+        this.temperature = temp;
+        System.out.println("🌡️  Thermostat '" + name + "' set to " + temp + "°C");
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode.toUpperCase();
+        System.out.println("🌡️  Thermostat '" + name + "' mode set to " + this.mode);
+    }
+
+    public int getTemperature() {
+        return temperature;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+}
+
+class SecurityCamera implements Device {
+    private boolean isRecording = false;
+    private final String name;
+
+    public SecurityCamera(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void operate() {
+        isRecording = !isRecording;
+        String status = isRecording ? "STARTED" : "STOPPED";
+        System.out.println("📹 Security Camera '" + name + "' recording " + status);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Security Camera - " + name;
+    }
+
+    @Override
+    public String getStatus() {
+        return String.format("📹 Camera[%s]: Recording: %s", name, isRecording ? "YES" : "NO");
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void startRecording() {
+        this.isRecording = true;
+        System.out.println("📹 Security Camera '" + name + "' started recording");
+    }
+
+    public void stopRecording() {
+        this.isRecording = false;
+        System.out.println("📹 Security Camera '" + name + "' stopped recording");
+    }
+
+    public boolean isRecording() {
+        return isRecording;
+    }
+}
+
+class MusicSystem implements Device {
+    private boolean isPlaying = false;
+    private int volume = 50;
+    private String currentTrack = "No track playing";
+    private final String name;
+
+    public MusicSystem(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void operate() {
+        isPlaying = !isPlaying;
+        String status = isPlaying ? "PLAYING" : "STOPPED";
+        System.out.println("🎵 Music System '" + name + "' is now " + status);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Music System - " + name;
+    }
+
+    @Override
+    public String getStatus() {
+        return String.format("🎵 Music[%s]: %s, Volume: %d%%, Track: %s",
+                name, isPlaying ? "PLAYING" : "STOPPED", volume, currentTrack);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void setVolume(int volume) {
+        this.volume = Math.max(0, Math.min(100, volume));
+        System.out.println("🎵 Music System '" + name + "' volume set to " + this.volume + "%");
+    }
+
+    public void playMusic(String track) {
+        this.isPlaying = true;
+        this.currentTrack = track;
+        System.out.println("🎵 Music System '" + name + "' playing '" + track + "' at volume " + volume + "%");
+    }
+
+    public void stopMusic() {
+        this.isPlaying = false;
+        System.out.println("🎵 Music System '" + name + "' stopped");
+    }
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public int getVolume() {
+        return volume;
+    }
+
+    public String getCurrentTrack() {
+        return currentTrack;
+    }
+}
+
+// Decorator Pattern
+abstract class DeviceDecorator implements Device {
+    protected Device decoratedDevice;
+
+    public DeviceDecorator(Device decoratedDevice) {
+        this.decoratedDevice = decoratedDevice;
+    }
+
+    @Override
+    public void operate() {
+        decoratedDevice.operate();
+    }
+
+    @Override
+    public String getDescription() {
+        return decoratedDevice.getDescription();
+    }
+
+    @Override
+    public String getStatus() {
+        return decoratedDevice.getStatus();
+    }
+
+    @Override
+    public String getName() {
+        return decoratedDevice.getName();
+    }
+}
+
+class VoiceControlDecorator extends DeviceDecorator {
+
+    public VoiceControlDecorator(Device decoratedDevice) {
+        super(decoratedDevice);
+        System.out.println("🎤 Voice control enabled for " + decoratedDevice.getName());
+    }
+
+    @Override
+    public void operate() {
+        super.operate();
+        enableVoiceControl();
+    }
+
+    @Override
+    public String getDescription() {
+        return super.getDescription() + " + 🎤 Voice Control";
+    }
+
+    private void enableVoiceControl() {
+        System.out.println("🎤 Voice control enabled for " + decoratedDevice.getName());
+    }
+
+    public void processVoiceCommand(String command) {
+        System.out.println("🎤 Processing voice command: '" + command + "' for " + decoratedDevice.getName());
+
+        switch (command.toLowerCase()) {
+            case "turn on":
+                if (!(decoratedDevice instanceof Light && ((Light) decoratedDevice).isOn())) {
+                    decoratedDevice.operate();
+                }
+                break;
+            case "turn off":
+                if (!(decoratedDevice instanceof Light && !((Light) decoratedDevice).isOn())) {
+                    decoratedDevice.operate();
+                }
+                break;
+            case "increase volume":
+                if (decoratedDevice instanceof MusicSystem) {
+                    MusicSystem music = (MusicSystem) decoratedDevice;
+                    music.setVolume(Math.min(100, music.getVolume() + 20));
+                }
+                break;
+            case "decrease volume":
+                if (decoratedDevice instanceof MusicSystem) {
+                    MusicSystem music = (MusicSystem) decoratedDevice;
+                    music.setVolume(Math.max(0, music.getVolume() - 20));
+                }
+                break;
+            case "set temperature to 22":
+                if (decoratedDevice instanceof Thermostat) {
+                    ((Thermostat) decoratedDevice).setTemperature(22);
+                }
+                break;
+            case "start recording":
+                if (decoratedDevice instanceof SecurityCamera) {
+                    ((SecurityCamera) decoratedDevice).startRecording();
+                }
+                break;
+            default:
+                System.out.println("✅ Voice command '" + command + "' executed on " + decoratedDevice.getName());
+        }
+    }
+}
+
+class EnergySavingDecorator extends DeviceDecorator {
+
+    public EnergySavingDecorator(Device decoratedDevice) {
+        super(decoratedDevice);
+        System.out.println("🔋 Energy saving mode enabled for " + decoratedDevice.getName());
+    }
+
+    @Override
+    public void operate() {
+        super.operate();
+        optimizeEnergyUsage();
+    }
+
+    @Override
+    public String getDescription() {
+        return super.getDescription() + " + 🔋 Energy Saving";
+    }
+
+    private void optimizeEnergyUsage() {
+        System.out.println("🔋 Energy saving mode activated for " + decoratedDevice.getName());
+
+        if (decoratedDevice instanceof Light) {
+            Light light = (Light) decoratedDevice;
+            light.setBrightness(Math.min(light.getBrightness(), 70));
+            System.out.println("💡 Light brightness optimized for energy saving");
+        } else if (decoratedDevice instanceof Thermostat) {
+            Thermostat thermostat = (Thermostat) decoratedDevice;
+            if (!"ECO".equals(thermostat.getMode())) {
+                thermostat.setMode("ECO");
+            }
+            System.out.println("🌡️ Thermostat set to eco mode for energy saving");
+        } else if (decoratedDevice instanceof MusicSystem) {
+            MusicSystem music = (MusicSystem) decoratedDevice;
+            if (music.getVolume() > 50) {
+                music.setVolume(50);
+                System.out.println("🎵 Music volume reduced for energy saving");
+            }
+        }
+    }
+
+    public double calculateEnergySavings() {
+        if (decoratedDevice instanceof Light) {
+            return 15.5;
+        } else if (decoratedDevice instanceof Thermostat) {
+            return 25.0;
+        } else if (decoratedDevice instanceof MusicSystem) {
+            return 8.0;
+        }
+        return 5.0;
+    }
+}
+
+class RemoteAccessDecorator extends DeviceDecorator {
+    private String connectionStatus = "DISCONNECTED";
+
+    public RemoteAccessDecorator(Device decoratedDevice) {
+        super(decoratedDevice);
+        connectToNetwork();
+    }
+
+    @Override
+    public void operate() {
+        super.operate();
+        enableRemoteAccess();
+    }
+
+    @Override
+    public String getDescription() {
+        return super.getDescription() + " + 🌐 Remote Access";
+    }
+
+    @Override
+    public String getStatus() {
+        return super.getStatus() + ", Remote: " + connectionStatus;
+    }
+
+    private void enableRemoteAccess() {
+        System.out.println("🌐 Remote access enabled for " + decoratedDevice.getName());
+    }
+
+    private void connectToNetwork() {
+        this.connectionStatus = "CONNECTED";
+        System.out.println("🌐 Remote access connected for " + decoratedDevice.getName());
+    }
+
+    public void remoteControl(String action) {
+        System.out.println("🌐 Remote control action: " + action + " on " + decoratedDevice.getName());
+        decoratedDevice.operate();
+    }
+
+    public String getConnectionStatus() {
+        return connectionStatus;
+    }
+}
+
+// Facade Pattern
+class HomeAutomationFacade {
+    private final List<Device> allDevices;
+    private final Device mainLight;
+    private final Device thermostat;
+    private final Device securityCamera;
+    private final Device musicSystem;
+
+    public HomeAutomationFacade(Device light, Device thermostat,
+                                Device camera, Device music) {
+        this.mainLight = light;
+        this.thermostat = thermostat;
+        this.securityCamera = camera;
+        this.musicSystem = music;
+
+        this.allDevices = new ArrayList<>();
+        allDevices.add(light);
+        allDevices.add(thermostat);
+        allDevices.add(camera);
+        allDevices.add(music);
+
+        System.out.println("🏠 Home Automation Facade initialized with " + allDevices.size() + " devices");
+    }
+
+    public void activateNightMode() {
+        System.out.println("\n🌙 === ACTIVATING NIGHT MODE ===");
+
+        if (mainLight instanceof Light) {
+            ((Light) mainLight).setBrightness(20);
+            if (((Light) mainLight).isOn()) {
+                mainLight.operate();
+            }
+        }
+
+        if (thermostat instanceof Thermostat) {
+            ((Thermostat) thermostat).setTemperature(18);
+            ((Thermostat) thermostat).setMode("SLEEP");
+        }
+
+        if (securityCamera instanceof SecurityCamera) {
+            ((SecurityCamera) securityCamera).startRecording();
+        }
+
+        if (musicSystem instanceof MusicSystem && ((MusicSystem) musicSystem).isPlaying()) {
+            musicSystem.operate();
+        }
+
+        System.out.println("✅ Night mode activated successfully");
+    }
+
+    public void startPartyMode() {
+        System.out.println("\n🎉 === STARTING PARTY MODE ===");
+
+        if (mainLight instanceof Light) {
+            ((Light) mainLight).setBrightness(85);
+            if (!((Light) mainLight).isOn()) {
+                mainLight.operate();
+            }
+        }
+
+        if (thermostat instanceof Thermostat) {
+            ((Thermostat) thermostat).setTemperature(21);
+            ((Thermostat) thermostat).setMode("COMFORT");
+        }
+
+        if (musicSystem instanceof MusicSystem) {
+            ((MusicSystem) musicSystem).setVolume(80);
+            ((MusicSystem) musicSystem).playMusic("Party Mix 2024");
+            if (!((MusicSystem) musicSystem).isPlaying()) {
+                musicSystem.operate();
+            }
+        }
+
+        if (securityCamera instanceof SecurityCamera) {
+            ((SecurityCamera) securityCamera).startRecording();
+        }
+
+        System.out.println("✅ Party mode activated! Let's have fun!");
+    }
+
+    public void leaveHome() {
+        System.out.println("\n🚪 === LEAVING HOME MODE ===");
+
+        System.out.println("Turning off all non-essential devices...");
+
+        if (mainLight instanceof Light && ((Light) mainLight).isOn()) {
+            mainLight.operate();
+        }
+
+        if (musicSystem instanceof MusicSystem && ((MusicSystem) musicSystem).isPlaying()) {
+            musicSystem.operate();
+        }
+
+        if (thermostat instanceof Thermostat) {
+            ((Thermostat) thermostat).setTemperature(16);
+            ((Thermostat) thermostat).setMode("AWAY");
+        }
+
+        if (securityCamera instanceof SecurityCamera) {
+            ((SecurityCamera) securityCamera).startRecording();
+        }
+
+        System.out.println("✅ Home secured. All devices in away mode.");
+    }
+
+    public void displaySystemStatus() {
+        System.out.println("\n📊 === CURRENT SYSTEM STATUS ===");
+        allDevices.forEach(device -> {
+            System.out.println("  • " + device.getStatus());
+        });
+        System.out.println("Total devices: " + allDevices.size());
+    }
+
+    public void emergencyShutdown() {
+        System.out.println("\n🚨 === EMERGENCY SHUTDOWN ===");
+
+        allDevices.forEach(device -> {
+            if (device instanceof Light && ((Light) device).isOn()) {
+                device.operate();
+            }
+            if (device instanceof MusicSystem && ((MusicSystem) device).isPlaying()) {
+                device.operate();
+            }
+        });
+
+        System.out.println("✅ Emergency shutdown completed");
+    }
+
+    public List<Device> getAllDevices() {
+        return new ArrayList<>(allDevices);
+    }
+
+    public Device getMainLight() { return mainLight; }
+    public Device getThermostat() { return thermostat; }
+    public Device getSecurityCamera() { return securityCamera; }
+    public Device getMusicSystem() { return musicSystem; }
+}
+
+// User Menu System
+public class SmartHomeAutomation {
+    private static Scanner scanner = new Scanner(System.in);
+    private static HomeAutomationFacade homeFacade;
+    private static Device smartLight, smartThermostat, smartCamera, smartMusic;
+
+    public static void main(String[] args) {
+        initializeSystem();
+        showMainMenu();
+    }
+
+    private static void initializeSystem() {
+        System.out.println("""
+            🏠 ===================================
+            🏠 SMART HOME AUTOMATION SYSTEM
+            🏠 ===================================
+            """);
+
+        System.out.println("🔄 Initializing smart home devices...");
+
+        // Create basic devices
+        Device basicLight = new Light("Living Room Light");
+        Device basicThermostat = new Thermostat("Main Thermostat");
+        Device basicCamera = new SecurityCamera("Front Door Camera");
+        Device basicMusic = new MusicSystem("Living Room Speaker");
+
+        // Apply decorators
+        smartLight = new VoiceControlDecorator(new EnergySavingDecorator(basicLight));
+        smartThermostat = new EnergySavingDecorator(new RemoteAccessDecorator(basicThermostat));
+        smartCamera = new RemoteAccessDecorator(basicCamera);
+        smartMusic = new VoiceControlDecorator(new EnergySavingDecorator(new RemoteAccessDecorator(basicMusic)));
+
+        // Create facade
+        homeFacade = new HomeAutomationFacade(smartLight, smartThermostat, smartCamera, smartMusic);
+
+        System.out.println("\n✅ System initialization complete!");
+    }
+
+    private static void showMainMenu() {
+        while (true) {
+            System.out.println("\n" + """
+                🏠 === SMART HOME MAIN MENU ===
+                1. 📊 System Status
+                2. 🎭 Smart Modes
+                3. 🔧 Device Control
+                4. 🎨 Decorator Features
+                5. 🚨 Emergency
+                0. ❌ Exit
+                """ + "=".repeat(30));
+
+            System.out.print("Choose an option (0-5): ");
+            int choice = getIntInput();
+
+            switch (choice) {
+                case 1 -> showSystemStatus();
+                case 2 -> showSmartModesMenu();
+                case 3 -> showDeviceControlMenu();
+                case 4 -> showDecoratorMenu();
+                case 5 -> emergencyMenu();
+                case 0 -> {
+                    System.out.println("👋 Thank you for using Smart Home Automation!");
+                    return;
+                }
+                default -> System.out.println("❌ Invalid option! Please try again.");
+            }
+        }
+    }
+
+    private static void showSystemStatus() {
+        homeFacade.displaySystemStatus();
+        waitForEnter();
+    }
+
+    private static void showSmartModesMenu() {
+        while (true) {
+            System.out.println("\n" + """
+                🎭 === SMART MODES ===
+                1. 🌙 Night Mode
+                2. 🎉 Party Mode
+                3. 🚪 Leave Home Mode
+                4. ↩️ Back to Main Menu
+                """ + "=".repeat(30));
+
+            System.out.print("Choose a mode (1-4): ");
+            int choice = getIntInput();
+
+            switch (choice) {
+                case 1 -> {
+                    homeFacade.activateNightMode();
+                    waitForEnter();
+                }
+                case 2 -> {
+                    homeFacade.startPartyMode();
+                    waitForEnter();
+                }
+                case 3 -> {
+                    homeFacade.leaveHome();
+                    waitForEnter();
+                }
+                case 4 -> { return; }
+                default -> System.out.println("❌ Invalid option! Please try again.");
+            }
+        }
+    }
+
+    private static void showDeviceControlMenu() {
+        while (true) {
+            System.out.println("\n" + """
+                🔧 === DEVICE CONTROL ===
+                1. 💡 Light Control
+                2. 🌡️  Thermostat Control
+                3. 📹 Camera Control
+                4. 🎵 Music Control
+                5. ↩️ Back to Main Menu
+                """ + "=".repeat(30));
+
+            System.out.print("Choose device (1-5): ");
+            int choice = getIntInput();
+
+            switch (choice) {
+                case 1 -> controlLight();
+                case 2 -> controlThermostat();
+                case 3 -> controlCamera();
+                case 4 -> controlMusic();
+                case 5 -> { return; }
+                default -> System.out.println("❌ Invalid option! Please try again.");
+            }
+        }
+    }
+
+    private static void controlLight() {
+        Light light = (Light) ((DeviceDecorator) smartLight).decoratedDevice;
+        System.out.println("\n💡 === LIGHT CONTROL ===");
+        System.out.println("1. Toggle On/Off");
+        System.out.println("2. Set Brightness");
+        System.out.println("3. Current Status");
+        System.out.print("Choose option: ");
+
+        int choice = getIntInput();
+        switch (choice) {
+            case 1 -> light.operate();
+            case 2 -> {
+                System.out.print("Enter brightness (0-100): ");
+                int brightness = getIntInput();
+                light.setBrightness(brightness);
+            }
+            case 3 -> System.out.println(light.getStatus());
+            default -> System.out.println("❌ Invalid option!");
+        }
+        waitForEnter();
+    }
+
+    private static void controlThermostat() {
+        Thermostat thermostat = (Thermostat) ((DeviceDecorator) smartThermostat).decoratedDevice;
+        System.out.println("\n🌡️  === THERMOSTAT CONTROL ===");
+        System.out.println("1. Set Temperature");
+        System.out.println("2. Set Mode");
+        System.out.println("3. Current Status");
+        System.out.print("Choose option: ");
+
+        int choice = getIntInput();
+        switch (choice) {
+            case 1 -> {
+                System.out.print("Enter temperature: ");
+                int temp = getIntInput();
+                thermostat.setTemperature(temp);
+            }
+            case 2 -> {
+                System.out.print("Enter mode (NORMAL/ECO/SLEEP): ");
+                String mode = scanner.nextLine();
+                thermostat.setMode(mode);
+            }
+            case 3 -> System.out.println(thermostat.getStatus());
+            default -> System.out.println("❌ Invalid option!");
+        }
+        waitForEnter();
+    }
+
+    private static void controlCamera() {
+        SecurityCamera camera = (SecurityCamera) ((DeviceDecorator) smartCamera).decoratedDevice;
+        System.out.println("\n📹 === CAMERA CONTROL ===");
+        System.out.println("1. Start Recording");
+        System.out.println("2. Stop Recording");
+        System.out.println("3. Toggle Recording");
+        System.out.println("4. Current Status");
+        System.out.print("Choose option: ");
+
+        int choice = getIntInput();
+        switch (choice) {
+            case 1 -> camera.startRecording();
+            case 2 -> camera.stopRecording();
+            case 3 -> camera.operate();
+            case 4 -> System.out.println(camera.getStatus());
+            default -> System.out.println("❌ Invalid option!");
+        }
+        waitForEnter();
+    }
+
+    private static void controlMusic() {
+        MusicSystem music = (MusicSystem) ((DeviceDecorator) smartMusic).decoratedDevice;
+        System.out.println("\n🎵 === MUSIC CONTROL ===");
+        System.out.println("1. Play/Pause");
+        System.out.println("2. Set Volume");
+        System.out.println("3. Play Specific Track");
+        System.out.println("4. Current Status");
+        System.out.print("Choose option: ");
+
+        int choice = getIntInput();
+        switch (choice) {
+            case 1 -> music.operate();
+            case 2 -> {
+                System.out.print("Enter volume (0-100): ");
+                int volume = getIntInput();
+                music.setVolume(volume);
+            }
+            case 3 -> {
+                System.out.print("Enter track name: ");
+                String track = scanner.nextLine();
+                music.playMusic(track);
+            }
+            case 4 -> System.out.println(music.getStatus());
+            default -> System.out.println("❌ Invalid option!");
+        }
+        waitForEnter();
+    }
+
+    private static void showDecoratorMenu() {
+        while (true) {
+            System.out.println("\n" + """
+                🎨 === DECORATOR FEATURES ===
+                1. 🎤 Voice Commands
+                2. 🌐 Remote Control
+                3. 🔋 Energy Saving Info
+                4. ↩️ Back to Main Menu
+                """ + "=".repeat(30));
+
+            System.out.print("Choose feature (1-4): ");
+            int choice = getIntInput();
+
+            switch (choice) {
+                case 1 -> voiceCommandsMenu();
+                case 2 -> remoteControlMenu();
+                case 3 -> energySavingMenu();
+                case 4 -> { return; }
+                default -> System.out.println("❌ Invalid option! Please try again.");
+            }
+        }
+    }
+
+    private static void voiceCommandsMenu() {
+        System.out.println("\n🎤 === VOICE COMMANDS ===");
+        System.out.println("Available commands:");
+        System.out.println("• 'turn on' - Turn device on");
+        System.out.println("• 'turn off' - Turn device off");
+        System.out.println("• 'increase volume' - Increase music volume");
+        System.out.println("• 'decrease volume' - Decrease music volume");
+        System.out.println("• 'set temperature to 22' - Set thermostat");
+        System.out.println("• 'start recording' - Start camera recording");
+
+        System.out.print("\nEnter voice command: ");
+        String command = scanner.nextLine();
+
+        // Apply to all voice-enabled devices
+        if (smartLight instanceof VoiceControlDecorator) {
+            ((VoiceControlDecorator) smartLight).processVoiceCommand(command);
+        }
+        if (smartMusic instanceof VoiceControlDecorator) {
+            ((VoiceControlDecorator) smartMusic).processVoiceCommand(command);
+        }
+
+        waitForEnter();
+    }
+
+    private static void remoteControlMenu() {
+        System.out.println("\n🌐 === REMOTE CONTROL ===");
+        System.out.println("1. Control Thermostat Remotely");
+        System.out.println("2. Control Camera Remotely");
+        System.out.println("3. Control Music System Remotely");
+        System.out.print("Choose device: ");
+
+        int choice = getIntInput();
+        switch (choice) {
+            case 1 -> {
+                if (smartThermostat instanceof RemoteAccessDecorator) {
+                    ((RemoteAccessDecorator) smartThermostat).remoteControl("temperature adjustment");
+                }
+            }
+            case 2 -> {
+                if (smartCamera instanceof RemoteAccessDecorator) {
+                    ((RemoteAccessDecorator) smartCamera).remoteControl("security check");
+                }
+            }
+            case 3 -> {
+                if (smartMusic instanceof RemoteAccessDecorator) {
+                    ((RemoteAccessDecorator) smartMusic).remoteControl("playback control");
+                }
+            }
+            default -> System.out.println("❌ Invalid option!");
+        }
+        waitForEnter();
+    }
+
+    private static void energySavingMenu() {
+        System.out.println("\n🔋 === ENERGY SAVING INFO ===");
+
+        double totalSavings = 0;
+
+        if (smartLight instanceof EnergySavingDecorator) {
+            double savings = ((EnergySavingDecorator) smartLight).calculateEnergySavings();
+            System.out.printf("💡 Light energy savings: %.1f%%\n", savings);
+            totalSavings += savings;
+        }
+
+        if (smartThermostat instanceof EnergySavingDecorator) {
+            double savings = ((EnergySavingDecorator) smartThermostat).calculateEnergySavings();
+            System.out.printf("🌡️  Thermostat energy savings: %.1f%%\n", savings);
+            totalSavings += savings;
+        }
+
+        if (smartMusic instanceof EnergySavingDecorator) {
+            double savings = ((EnergySavingDecorator) smartMusic).calculateEnergySavings();
+            System.out.printf("🎵 Music system energy savings: %.1f%%\n", savings);
+            totalSavings += savings;
+        }
+
+        System.out.printf("💰 Total energy savings: %.1f%%\n", totalSavings);
+        waitForEnter();
+    }
+
+    private static void emergencyMenu() {
+        System.out.println("\n🚨 === EMERGENCY MENU ===");
+        System.out.println("1. Emergency Shutdown");
+        System.out.println("2. Cancel");
+        System.out.print("Are you sure? (1-2): ");
+
+        int choice = getIntInput();
+        if (choice == 1) {
+            homeFacade.emergencyShutdown();
+        } else {
+            System.out.println("✅ Emergency cancelled.");
+        }
+        waitForEnter();
+    }
+
+    private static int getIntInput() {
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.print("❌ Please enter a valid number: ");
+            }
+        }
+    }
+
+    private static void waitForEnter() {
+        System.out.print("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+}
