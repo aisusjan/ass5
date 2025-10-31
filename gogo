@@ -1,0 +1,301 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+// ===== Interface =====
+type Device interface {
+	Operate()
+	GetDescription() string
+	GetStatus() string
+	GetName() string
+}
+
+// ===== Devices =====
+type Light struct {
+	name       string
+	isOn       bool
+	brightness int
+}
+
+func NewLight(name string) *Light {
+	return &Light{name: name, brightness: 100}
+}
+
+func (l *Light) Operate() {
+	l.isOn = !l.isOn
+	status := "OFF"
+	if l.isOn {
+		status = "ON"
+	}
+	fmt.Printf("💡 Light '%s' is now %s\n", l.name, status)
+}
+
+func (l *Light) SetBrightness(level int) {
+	if level < 0 {
+		level = 0
+	}
+	if level > 100 {
+		level = 100
+	}
+	l.brightness = level
+	fmt.Printf("💡 Light '%s' brightness set to %d%%\n", l.name, level)
+}
+
+func (l *Light) GetDescription() string {
+	return "Smart Light - " + l.name
+}
+func (l *Light) GetStatus() string {
+	status := "OFF"
+	if l.isOn {
+		status = "ON"
+	}
+	return fmt.Sprintf("💡 %s: %s, Brightness %d%%", l.name, status, l.brightness)
+}
+func (l *Light) GetName() string { return l.name }
+
+// ===== Thermostat =====
+type Thermostat struct {
+	name        string
+	temperature int
+	mode        string
+}
+
+func NewThermostat(name string) *Thermostat {
+	return &Thermostat{name: name, temperature: 22, mode: "NORMAL"}
+}
+
+func (t *Thermostat) Operate() {
+	fmt.Printf("🌡️  Thermostat '%s' maintaining %d°C (%s mode)\n", t.name, t.temperature, t.mode)
+}
+
+func (t *Thermostat) SetTemperature(temp int) {
+	t.temperature = temp
+	fmt.Printf("🌡️  Thermostat '%s' set to %d°C\n", t.name, temp)
+}
+
+func (t *Thermostat) SetMode(mode string) {
+	t.mode = strings.ToUpper(mode)
+	fmt.Printf("🌡️  Thermostat '%s' mode set to %s\n", t.name, t.mode)
+}
+
+func (t *Thermostat) GetDescription() string { return "Smart Thermostat - " + t.name }
+func (t *Thermostat) GetStatus() string {
+	return fmt.Sprintf("🌡️  %s: %d°C, Mode %s", t.name, t.temperature, t.mode)
+}
+func (t *Thermostat) GetName() string { return t.name }
+
+// ===== MusicSystem =====
+type MusicSystem struct {
+	name   string
+	isPlay bool
+	volume int
+	track  string
+}
+
+func NewMusicSystem(name string) *MusicSystem {
+	return &MusicSystem{name: name, volume: 50, track: "No track playing"}
+}
+
+func (m *MusicSystem) Operate() {
+	m.isPlay = !m.isPlay
+	state := "STOPPED"
+	if m.isPlay {
+		state = "PLAYING"
+	}
+	fmt.Printf("🎵 Music '%s' is now %s\n", m.name, state)
+}
+func (m *MusicSystem) Play(track string) {
+	m.isPlay = true
+	m.track = track
+	fmt.Printf("🎵 Music '%s' playing '%s'\n", m.name, track)
+}
+func (m *MusicSystem) SetVolume(v int) {
+	if v < 0 {
+		v = 0
+	}
+	if v > 100 {
+		v = 100
+	}
+	m.volume = v
+	fmt.Printf("🎵 Music '%s' volume set to %d%%\n", m.name, v)
+}
+func (m *MusicSystem) GetDescription() string { return "Music System - " + m.name }
+func (m *MusicSystem) GetStatus() string {
+	state := "STOPPED"
+	if m.isPlay {
+		state = "PLAYING"
+	}
+	return fmt.Sprintf("🎵 %s: %s, Vol %d%%, Track '%s'", m.name, state, m.volume, m.track)
+}
+func (m *MusicSystem) GetName() string { return m.name }
+
+// ===== Decorators =====
+type DeviceDecorator struct {
+	device Device
+}
+
+func (d *DeviceDecorator) Operate()               { d.device.Operate() }
+func (d *DeviceDecorator) GetDescription() string { return d.device.GetDescription() }
+func (d *DeviceDecorator) GetStatus() string      { return d.device.GetStatus() }
+func (d *DeviceDecorator) GetName() string        { return d.device.GetName() }
+
+type VoiceControl struct{ DeviceDecorator }
+
+func NewVoiceControl(d Device) *VoiceControl {
+	fmt.Printf("🎤 Voice control enabled for %s\n", d.GetName())
+	return &VoiceControl{DeviceDecorator{d}}
+}
+func (v *VoiceControl) ProcessVoice(cmd string) {
+	fmt.Printf("🎤 Command '%s' received for %s\n", cmd, v.device.GetName())
+	switch strings.ToLower(cmd) {
+	case "turn on", "turn off":
+		v.device.Operate()
+	case "increase volume":
+		if m, ok := v.device.(*MusicSystem); ok {
+			m.SetVolume(m.volume + 10)
+		}
+	case "decrease volume":
+		if m, ok := v.device.(*MusicSystem); ok {
+			m.SetVolume(m.volume - 10)
+		}
+	default:
+		fmt.Println("✅ Command executed.")
+	}
+}
+
+type EnergySaving struct{ DeviceDecorator }
+
+func NewEnergySaving(d Device) *EnergySaving {
+	fmt.Printf("🔋 Energy saving mode enabled for %s\n", d.GetName())
+	return &EnergySaving{DeviceDecorator{d}}
+}
+func (e *EnergySaving) Operate() {
+	e.device.Operate()
+	fmt.Printf("🔋 Energy optimization applied for %s\n", e.device.GetName())
+}
+
+// ===== Facade =====
+type HomeAutomationFacade struct {
+	light      Device
+	thermostat Device
+	music      Device
+}
+
+func NewHomeAutomationFacade(l, t, m Device) *HomeAutomationFacade {
+	fmt.Println("🏠 Home Automation System initialized")
+	return &HomeAutomationFacade{light: l, thermostat: t, music: m}
+}
+
+func (f *HomeAutomationFacade) NightMode() {
+	fmt.Println("🌙 Activating Night Mode...")
+	if l, ok := f.light.(*Light); ok {
+		l.SetBrightness(20)
+		if l.isOn {
+			l.Operate()
+		}
+	}
+	if t, ok := f.thermostat.(*Thermostat); ok {
+		t.SetTemperature(18)
+		t.SetMode("SLEEP")
+	}
+	if m, ok := f.music.(*MusicSystem); ok && m.isPlay {
+		m.Operate()
+	}
+	fmt.Println("✅ Night Mode activated.")
+}
+
+func (f *HomeAutomationFacade) PartyMode() {
+	fmt.Println("🎉 Starting Party Mode...")
+	if l, ok := f.light.(*Light); ok {
+		l.SetBrightness(90)
+		if !l.isOn {
+			l.Operate()
+		}
+	}
+	if t, ok := f.thermostat.(*Thermostat); ok {
+		t.SetTemperature(21)
+		t.SetMode("COMFORT")
+	}
+	if m, ok := f.music.(*MusicSystem); ok {
+		m.SetVolume(80)
+		m.Play("Party Mix 2025")
+	}
+	fmt.Println("✅ Party Mode activated!")
+}
+
+func (f *HomeAutomationFacade) ShowStatus() {
+	fmt.Println("\n📊 System Status:")
+	fmt.Println(f.light.GetStatus())
+	fmt.Println(f.thermostat.GetStatus())
+	fmt.Println(f.music.GetStatus())
+}
+
+// ===== Utility =====
+var reader = bufio.NewReader(os.Stdin)
+
+func input(prompt string) string {
+	fmt.Print(prompt)
+	text, _ := reader.ReadString('\n')
+	return strings.TrimSpace(text)
+}
+func inputInt(prompt string) int {
+	for {
+		val := input(prompt)
+		if n, err := strconv.Atoi(val); err == nil {
+			return n
+		}
+		fmt.Println("❌ Enter a valid number.")
+	}
+}
+
+// ===== Main Menu =====
+func main() {
+	// Devices
+	light := NewLight("Living Room")
+	thermostat := NewThermostat("Main Thermostat")
+	music := NewMusicSystem("Speaker")
+
+	// Decorators
+	smartLight := NewEnergySaving(light)
+	smartThermostat := NewEnergySaving(thermostat)
+	smartMusic := NewVoiceControl(NewEnergySaving(music))
+
+	// Facade
+	home := NewHomeAutomationFacade(smartLight, smartThermostat, smartMusic)
+
+	for {
+		fmt.Println(`
+🏠  SMART HOME MENU 
+1. 📊 Show System Status
+2. 🌙 Night Mode
+3. 🎉 Party Mode
+4. 🎤 Voice Command
+0. ❌ Exit`)
+		choice := inputInt("Choose option: ")
+		switch choice {
+		case 1:
+			home.ShowStatus()
+		case 2:
+			home.NightMode()
+		case 3:
+			home.PartyMode()
+		case 4:
+			cmd := input("Enter voice command: ")
+			if smartMusic != nil {
+				smartMusic.ProcessVoice(cmd)
+			}
+
+		case 0:
+			fmt.Println("👋 Exiting Smart Home. Goodbye!")
+
+		default:
+			fmt.Println("❌ Invalid choice.")
+		}
+	}
+}
