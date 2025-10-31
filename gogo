@@ -1,0 +1,83 @@
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	var lightOn bool = false
+	var temp int = 22
+	var musicOn bool = false
+	var volume int = 50
+	var song string = "none"
+
+	for {
+		fmt.Println("\nSMART HOME v0.1")
+		fmt.Println("1. light on/off")
+		fmt.Println("2. change temp")
+		fmt.Println("3. music on/off")
+		fmt.Println("4. voice cmd")
+		fmt.Println("5. show info")
+		fmt.Println("0. exit")
+
+		var n int
+		fmt.Print("select: ")
+		fmt.Scanln(&n)
+
+		if n == 1 {
+			if lightOn == false {
+				lightOn = true
+				fmt.Println("light now on")
+			} else {
+				lightOn = false
+				fmt.Println("light now off")
+			}
+		} else if n == 2 {
+			fmt.Print("enter new temp: ")
+			fmt.Scanln(&temp)
+			if temp < 15 {
+				fmt.Println("too cold, but ok")
+			}
+			fmt.Println("temp set to", temp)
+		} else if n == 3 {
+			if musicOn == false {
+				musicOn = true
+				fmt.Print("song name: ")
+				fmt.Scanln(&song)
+				fmt.Println("playing song", song)
+			} else {
+				musicOn = false
+				fmt.Println("music stopped")
+			}
+		} else if n == 4 {
+			var cmd string
+			fmt.Print("say command: ")
+			fmt.Scanln(&cmd)
+			if cmd == "on" {
+				lightOn = true
+				fmt.Println("light by voice: on")
+			} else if cmd == "off" {
+				lightOn = false
+				fmt.Println("light by voice: off")
+			} else if cmd == "music" {
+				musicOn = true
+				song = "voice song"
+				fmt.Println("voice started music")
+			} else {
+				fmt.Println("don’t know this command")
+			}
+		} else if n == 5 {
+			fmt.Println("------status------")
+			fmt.Println("light:", lightOn)
+			fmt.Println("temp:", temp)
+			fmt.Println("music:", musicOn, "song:", song, "vol:", volume)
+			fmt.Println("------------------")
+		} else if n == 0 {
+			fmt.Println("bye bye...")
+			break
+		} else {
+			fmt.Println("wrong number try again")
+		}
+	}
+}
+
